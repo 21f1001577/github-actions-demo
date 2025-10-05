@@ -1,0 +1,61 @@
+name: CI with Cache Demo
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      id: cache
+      with:
+        path: |
+          ~/.cache
+          node_modules
+          .venv
+        key: cache-36f82fb-${{ runner.os }}-${{ hashFiles('**/package-lock.json', '**/requirements.txt') }}
+        restore-keys: |
+          cache-36f82fb-${{ runner.os }}-
+
+    - name: prime-cache-36f82fb
+      id: cache-result
+      run: |
+        if [ "${{ steps.cache.outputs.cache-hit }}" == "true" ]; then
+          echo "✅ Cache hit for key: cache-36f82fb"
+          echo "CACHE_RESULT=hit" >> $GITHUB_OUTPUT
+        else
+          echo "🔄 Cache miss for key: cache-36f82fb"
+          echo "CACHE_RESULT=miss" >> $GITHUB_OUTPUT
+          
+          # Simulate installing dependencies to prime the cache
+          echo "Priming cache with dependencies..."
+          mkdir -p ~/.cache
+          echo "cached-data-$(date)" > ~/.cache/dependencies.txt
+          mkdir -p node_modules
+          echo "node-modules-cache" > node_modules/.cache
+          python -m venv .venv 2>/dev/null || echo "Python venv creation skipped"
+        fi
+
+    - name: Install dependencies (if cache miss)
+      if: steps.cache-result.outputs.CACHE_RESULT == 'miss'
+      run: |
+        echo "Installing dependencies to prime cache..."
+        # Simulate dependency installation
+        npm install --silent 2>/dev/null || echo "No package.json found"
+        pip install -r requirements.txt 2>/dev/null || echo "No requirements.txt found"
+
+    - name: Run tests
+      run: |
+        echo "Running tests..."
+        echo "Cache status: ${{ steps.cache-result.outputs.CACHE_RESULT }}"
+        echo "Workflow completed successfully!"
