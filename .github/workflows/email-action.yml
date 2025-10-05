@@ -1,0 +1,32 @@
+name: CI/CD Pipeline with Email Step
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 21f1001577@ds.study.iitm.ac.in - Setup and Test
+      run: |
+        echo "Running tests for repository ${{ github.repository }}"
+        echo "Current branch: ${{ github.ref }}"
+        echo "This step contains my email address in the name"
+        
+    - name: Build and validate
+      run: |
+        echo "Simulating build process..."
+        echo "All steps completed successfully!"
+        
+    - name: Success notification
+      run: |
+        echo "✅ Workflow completed successfully!"
+        echo "Repository: https://github.com/${{ github.repository }}"
